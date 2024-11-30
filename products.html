@@ -151,20 +151,16 @@
 
 <header>
     <h1>Horizonet Store</h1>
-   
-
-
 </header>
-    <nav>
-        <span id="authLinks">
-            <a href="login.html" id="loginLink">Login</a>
-            <a href="signup.html" id="signupLink">Sign Up</a>
-        </span>
-        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">Toggle Theme</button>
-        <button class="cart-button" onclick="goToCart()">View Cart</button>
-        <button class="logout-button" id="logoutButton" onclick="logout()" style="display: none;">Logout</button>
-    </nav>
-
+<nav>
+    <span id="authLinks">
+        <a href="login.html" id="loginLink">Login</a>
+        <a href="signup.html" id="signupLink">Sign Up</a>
+    </span>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">Toggle Theme</button>
+    <button class="cart-button" onclick="goToCart()">View Cart</button>
+    <button class="logout-button" id="logoutButton" onclick="logout()" style="display: none;">Logout</button>
+</nav>
 
 <div class="container">
     <div class="search">
@@ -180,8 +176,10 @@
 </footer>
 
 <script>
-    function loadProducts() {
-        const products = JSON.parse(localStorage.getItem('products')) || [];
+    async function loadProducts() {
+        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/YOUR_SHEET_ID/values/Sheet1?key=YOUR_API_KEY`);
+        const data = await response.json();
+        const products = data.values.slice(1); // Skip header row
         const productList = document.getElementById('productList');
         productList.innerHTML = ''; // Clear existing products
         const user = JSON.parse(localStorage.getItem('loggedInUser'));
@@ -190,51 +188,56 @@
             const productDiv = document.createElement('div');
             productDiv.className = 'product';
             productDiv.innerHTML = `
-                <h3><a href="product.html?id=${index}">${product.name}</a></h3>
-                <p>$${parseFloat(product.price).toFixed(2)}</p>
+                <h3><a href="product.html?id=${index}">${product[0]}</a></h3> <!-- Name -->
+                <p>$${parseFloat(product[2]).toFixed(2)}</p> <!-- Price -->
                 ${user && user.email === "pikachusousuke@gmail.com" ? `<button class="delete-button" onclick="confirmDeleteProduct(${index})">Delete Product</button>` : ''}
             `;
             productList.appendChild(productDiv);
         });
     }
 
-    function confirmDeleteProduct(index) {
+    async function confirmDeleteProduct(index) {
         if (confirm("Are you sure you want to delete this product?")) {
-            deleteProduct(index);
+            await deleteProduct(index);
         }
     }
 
-    function deleteProduct(index) {
-        const products = JSON.parse(localStorage.getItem('products')) || [];
-        products.splice(index, 1); // Remove the product from the array
-        localStorage.setItem('products', JSON.stringify(products)); // Update local storage
-        loadProducts(); // Reload the products
+    async function deleteProduct(index) {
+        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/16fxUN04vWLpLv08OeCBAmSGJuGjFdrjWX2nLch6Gldk/values/Sheet1?key=AIzaSyC7cpGHAf8IJYirISXzEq80hVgDKzj9vOI`);
+        const data = await response.json();
+        const products = data.values.slice(1); // Get current products
+
+        // Here you would need to implement the logic to delete from Google Sheets
+        // Google Sheets API does not support direct row deletion; you will need to
+        // append a new row without the deleted product or manage it differently.
+
+        // Reload products after deletion
+        loadProducts();
     }
 
     function searchProducts() {
         const query = document.getElementById('searchInput').value.toLowerCase();
-        const products = JSON.parse(localStorage.getItem('products')) || [];
         const productList = document.getElementById('productList');
         productList.innerHTML = ''; // Clear existing products
 
-        const user = JSON.parse(localStorage.getItem('loggedInUser')); // Fetch user info again
+        // Fetch products again to search through them
+        loadProducts().then(() => {
+            const user = JSON.parse(localStorage.getItem('loggedInUser')); // Fetch user info
 
-        if (query === "") {
-            loadProducts(); // Show all products if no search query
-        } else {
-            products.forEach((product, index) => {
-                if (product.name.toLowerCase().includes(query)) {
-                    const productDiv = document.createElement('div');
-                    productDiv.className = 'product';
-                    productDiv.innerHTML = `
-                        <h3><a href="product.html?id=${index}">${product.name}</a></h3>
-                        <p>$${parseFloat(product.price).toFixed(2)}</p>
-                        ${user && user.email === "pikachusousuke@gmail.com" ? `<button class="delete-button" onclick="confirmDeleteProduct(${index})">Delete Product</button>` : ''}
-                    `;
-                    productList.appendChild(productDiv);
-                }
-            });
-        }
+            if (query === "") {
+                loadProducts(); // Show all products if no search query
+            } else {
+                const products = [...productList.children]; // Get current product elements
+                products.forEach((productDiv, index) => {
+                    const productName = productDiv.querySelector('h3 a').textContent.toLowerCase();
+                    if (productName.includes(query)) {
+                        productList.appendChild(productDiv); // Keep matched products
+                    } else {
+                        productDiv.remove(); // Remove unmatched products
+                    }
+                });
+            }
+        });
     }
 
     function toggleTheme() {

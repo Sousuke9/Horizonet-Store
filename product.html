@@ -94,18 +94,23 @@
         return urlParams.get('id');
     }
 
-    function loadProduct() {
+    async function loadProduct() {
         const productId = getProductId();
-        const products = JSON.parse(localStorage.getItem('products')) || [];
-        const product = products[productId];
+        
+        // Fetch products from Google Sheets
+        const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/16fxUN04vWLpLv08OeCBAmSGJuGjFdrjWX2nLch6Gldk/values/Sheet1?key=AIzaSyC7cpGHAf8IJYirISXzEq80hVgDKzj9vOI`);
+        const data = await response.json();
+        const products = data.values.slice(1); // Skip header row
+        
+        const product = products[productId]; // Get the product by ID
 
         if (product) {
             const productDetails = document.getElementById('productDetails');
             productDetails.innerHTML = `
-                <h2>${product.name}</h2>
-                <img src="${product.image || 'placeholder.jpg'}" alt="${product.name}">
-                <p><strong>Tags:</strong> ${product.tags.join(', ')}</p>
-                <p>${product.description || 'No description available.'}</p>
+                <h2>${product[0]}</h2> <!-- Name -->
+                <img src="${product[4] || 'placeholder.jpg'}" alt="${product[0]}"> <!-- Image -->
+                <p><strong>Tags:</strong> ${product[3].split(',').join(', ')}</p> <!-- Tags -->
+                <p>${product[1] || 'No description available.'}</p> <!-- Description -->
             `;
         } else {
             document.body.innerHTML = '<h2>Product not found.</h2>';
