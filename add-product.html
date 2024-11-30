@@ -158,7 +158,7 @@
             const base64Image = event.target.result;
 
             try {
-                const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/16fxUN04vWLpLv08OeCBAmSGJuGjFdrjWX2nLch6Gldk/values/Sheet1:append?valueInputOption=USER_ENTERED&key=AIzaSyC7cpGHAf8IJYirISXzEq80hVgDKzj9vOI`, {
+                const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/16fxUN04vWLpLv08OeCBAmSGJuGjFdrjWX2nLch6Gldk/values/Sheet1?key=AIzaSyC7cpGHAf8IJYirISXzEq80hVgDKzj9vOI`, {
                     method: 'POST',
                     body: JSON.stringify({
                         values: [[productName, productDescription, productPrice, productTags.join(', '), base64Image, 'pikachusousuke@gmail.com']]
