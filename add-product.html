@@ -207,7 +207,7 @@
                             alert("Error adding product: " + errorData.error.message);
                         }
                     } catch (error) {
-                        // Hide loading spinner
+                        // Hide loading spinner even on error
                         loader.style.display = 'none';
                         console.error('Network error:', error);
                         alert("Network error while adding product.");
